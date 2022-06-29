@@ -146,7 +146,6 @@ This below needs to be in the values.yaml file with the setup for the tezos node
     storageClassName: ""
     storage: "2000Gi"
     replicas: 1
-
     db_snapshot_url: https://tzkt.fra1.digitaloceanspaces.com/snapshots/tzkt_v1.8_mainnet.backup
     config:
       rpc_url: http://rolling-node-0.rolling-node:8732
@@ -191,15 +190,15 @@ How do I fix this?
 
 `May 31 14:16:46.380 - validator.chain: Request pushed on 2022-05-31T14:16:46.318-00:00, treated in 97.797us, completed in 60.131ms 
 tezos-node: Error:
-              Invalid data directory '/var/tezos/node/data': Please provide a clean directory by removing the following files: context, store.
+              Invalid data directory '/var/tezos/node/data': Please provide a clean directory by removing the following files: context, store.`
             
-+ sleep 60
-+ /usr/local/bin/tezos-node run --bootstrap-threshold 0 --config-file /etc/tezos/config.json
+` sleep 60`
+` /usr/local/bin/tezos-node run --bootstrap-threshold 0 --config-file /etc/tezos/config.json
 tezos-node: Error:
               Invalid data directory '/var/tezos/node/data': Please provide a clean directory by removing the following files: context, store.
 `
 
-I did not make the volume big enough.
+I did not make the volume big enough was the issue. I had to destroy everythign and make sure the K8S volumes were at least 500 gb I made them over a tb
 
 
 Tzkt
@@ -207,7 +206,7 @@ Tzkt
 `Failed to rebase branch. An exception has been raised that is likely due to a transient failure. System.InvalidOperationException: An exception has been raised that is likely due to a transient failure`
 
 
-kubectl describe pod tzkt-indexer-0 -n clubnft
+`kubectl describe pod tzkt-indexer-0 -n clubnft`
 
 # original readme for this project below
 
