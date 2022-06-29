@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: lb-tezos-service
+spec:
+  selector:
+    app: archive-node
+  ports:
+    - port: 9732
+      targetPort: 9732
+  type: LoadBalancer
