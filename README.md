@@ -10,14 +10,16 @@ Update the configuration for the exec plugin: invalid apiVersion "client.authent
 `aws eks --region us-east-2 update-kubeconfig --name tezos-node-0`
 
 ### Add the mapUsers
+
 `kubectl -n kube-system edit cm aws-auth`
 
-- userarn: arn:aws:iam::077458259197:user/NimaYahyazadeh
+`- userarn: arn:aws:iam::077458259197:user/NimaYahyazadeh
       username: NimaYahyazadeh
       groups:
         - system:masters`
 
 ### Create the nodegroup
+
 `eksctl create nodegroup \
   --cluster tezos-node-0 \
   --region us-east-2 \
@@ -31,6 +33,7 @@ Update the configuration for the exec plugin: invalid apiVersion "client.authent
 ### Increase size of node-type
 
 Change the instance in the –node-type and use a new nodegroup --name
+
 `eksctl create nodegroup \                                                        
   --cluster tezos-node-0 \
   --region us-east-2 \
@@ -41,27 +44,32 @@ Change the instance in the –node-type and use a new nodegroup --name
   --nodes-max 2 \
   --node-volume-size 1624`
 
+### Delete the node group
+
 Delete the old node group and it will build the new pods and drain out the old ones
 
-### Delete the node group
 `eksctl delete nodegroup \
   --cluster tezos-node-0 \
   --region us-east-2 \
   --name tezos-node` 
 
 Upgrade helm
+
 `brew upgrade kubernetes-helm`                                                  
 `helm  init --upgrade`
 
 Add the repo that contains the helm charts needed
+
  `helm repo add oxheadalpha https://oxheadalpha.github.io/tezos-helm-charts/`
 
 To install just the rolling-node
+
 `helm install tezos-mainnet oxheadalpha/tezos-chain \  
 --namespace clubnft --create-namespace`
 
 
-Archive node works
+Archive node installation
+
 `helm install tezos-mainnet oxheadalpha/tezos-chain \
 --namespace clubnft --create-namespace --values ./setup_node_tzkt.yaml`
 
@@ -69,18 +77,28 @@ Archive node works
 
 
 Viewing logs
+
 `kubectl logs -n clubnft statefulset/rolling-node -f`
 `kubectl -n clubnft logs -l appType=tezos-node -c octez-node -f` 
 
 
 Shell
+
 `kubectl exec -it archive-node-0 -c octez-node -n clubnft -- sh`
 `kubectl exec -it rolling-node-0 -n clubnft -- sh`
 `kubectl exec -it archive-node-0 -c snapshot-downloader -n clubnft -- sh
 -c octez-node, sidecar, config-init,, config-generator, snapshot-downloader,, snapshot-importer`
 
+### Use K9s to see what is going on
+
+Install k9s it is easier than using kubectl
+
+`brew install derailed/k9s/k9s`
+
+`k9s -n clubnft`
 
 Load Balancer
+
 `kubectl expose -f lb_tezos_archive_node.yaml -n clubnft --target-port=9732 --type=LoadBalancer`
 
 `lb_service.yaml 
@@ -97,23 +115,21 @@ spec:
   type: LoadBalancer`
 
 There is also an Lb for the rpc node if it needs to be exposed
+
 `lb_tezos_node_rpc.yaml`
 
 One for the postreSQL so you can query it directly
+
 `lb_sql_service.yaml`
 
 Show the services running
+
 `kubectl get svc -n clubnft`
 
 `lb-sql-service     LoadBalancer   10.100.29.110    a24d8318fd0e143ffaf0c47aa2418ea8-504530875.us-east-2.elb.amazonaws.com   5432:31252/TCP 
 lb-tezos-service   LoadBalancer   10.100.172.162   ae4865e9f40cb4131bac8f316046f168-517538289.us-east-2.elb.amazonaws.com   9732:30367/TCP
 lb-tzkt-service    LoadBalancer   10.100.209.225   acdc26f84ff6d40778ecae5a7839f25a-111847093.us-east-2.elb.amazonaws.com   5000:32260/TCP`
 
-### Use K9s to see what is going on
-Install k9s
-
-`brew install derailed/k9s/k9s`
-`k9s -n clubnft`
 
 ## Configuring Tzkt
 
@@ -127,31 +143,12 @@ This below needs to be in the values.yaml file with the setup for the tezos node
     api_image_tag: "1.8.4"
     indexer_image: "bakingbad/tzkt-sync"
     indexer_image_tag: "1.8.4"
-#
-     ## Database volumeClaimTemplates config
     storageClassName: ""
     storage: "2000Gi"
-     ## Statefulset annotations
-#     # annotations:
-#
-#     ## Indexer replicas
     replicas: 1
-#
-#     ## Tzkt provides new snapshots as they update their code. Update your
-#     ## indexers by specifying new docker image tags and by using the matching
-#     ## db_snapshot_url. Spin up an additional replica if you only have one to
-#     ## avoid downtime. See tzkt's readme for public networks' db snapshot urls.
-#     ## If you want to index a brand new archive node you are spinning up, just
-#     ## let the indexer start syncing with it from scratch.
-#     ## https://github.com/baking-bad/tzkt
-#    db_snapshot_url: https://tzkt.fra1.digitaloceanspaces.com/snapshots/tzkt_v1.6_mainnet.backup
+
     db_snapshot_url: https://tzkt.fra1.digitaloceanspaces.com/snapshots/tzkt_v1.8_mainnet.backup
-#
-#     ## Configurable tzkt fields
     config:
-#     ## Url of the archive node to index. You will need to create an archive node up
-#     ## above in the `nodes` section. The `rpc_url` field is looking for a node named
-#     ## `archive-node`.
       rpc_url: http://rolling-node-0.rolling-node:8732
       db_name: db
       db_user: admin
@@ -160,6 +157,7 @@ This below needs to be in the values.yaml file with the setup for the tezos node
       indexer_log_level: Debug`
 
 ### Upgrade
+
 Modify archive_values.yaml with the new version of the containers and the new snapshot version for tztk
 
 `helm upgrade tezos-mainnet oxheadalpha/tezos-chain \                             
@@ -168,6 +166,7 @@ Modify archive_values.yaml with the new version of the containers and the new sn
 Wait hours for it to install everything
 
 ### Load balancer
+
 `kubectl expose -f lb_tzkt_service.yaml -n clubnft --target-port=5000 --type=LoadBalancer --port=5000`
 
 `apiVersion: v1
@@ -185,11 +184,12 @@ spec:
 
 
 ## Errors
+
 Readiness probe failed: Get "http://192.168.7.229:31732/is_synced": dial tcp 192.168.7.229:31732: connect: connection refused
 
 How do I fix this? 
 
-May 31 14:16:46.380 - validator.chain: Request pushed on 2022-05-31T14:16:46.318-00:00, treated in 97.797us, completed in 60.131ms 
+`May 31 14:16:46.380 - validator.chain: Request pushed on 2022-05-31T14:16:46.318-00:00, treated in 97.797us, completed in 60.131ms 
 tezos-node: Error:
               Invalid data directory '/var/tezos/node/data': Please provide a clean directory by removing the following files: context, store.
             
@@ -197,12 +197,14 @@ tezos-node: Error:
 + /usr/local/bin/tezos-node run --bootstrap-threshold 0 --config-file /etc/tezos/config.json
 tezos-node: Error:
               Invalid data directory '/var/tezos/node/data': Please provide a clean directory by removing the following files: context, store.
+`
 
 I did not make the volume big enough.
 
 
 Tzkt
-Failed to rebase branch. An exception has been raised that is likely due to a transient failure.                                                                                             System.InvalidOperationException: An exception has been raised that is likely due to a transient failure
+
+`Failed to rebase branch. An exception has been raised that is likely due to a transient failure. System.InvalidOperationException: An exception has been raised that is likely due to a transient failure`
 
 
 kubectl describe pod tzkt-indexer-0 -n clubnft
