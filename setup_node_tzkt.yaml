@@ -399,6 +399,6 @@ indexers:
       rpc_url: http://rolling-node-0.rolling-node:8732
       db_name: db
       db_user: admin
-      db_password: thereIsaMan*8
+      db_password: a_password
       api_log_level: Debug
       indexer_log_level: Debug
