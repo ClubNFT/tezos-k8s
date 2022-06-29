@@ -1,6 +1,8 @@
 
 # Setting up K8S Tezos Archive Node and tzkt
 
+Documented also at https://docs.google.com/document/d/1ar35oSftOCs6BF7xfVtywmTO-wUtG9ztpGCjw8tQmyM/edit?usp=sharing
+
 ## Set up K8S 
 
 `eksctl create cluster --name tezos-node-0 --version 1.22 --without-nodegroup --region=us-east-2 --node-volume-size=4096`
